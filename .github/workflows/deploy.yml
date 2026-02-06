@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy with API Key Injection
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,23 +20,40 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Create config.js with API Key
+        
+      - name: Inject API Key into HTML
         run: |
-          echo "window.GEMINI_API_KEY = '${{ secrets.GEMINI_API_KEY }}';" > config.js
+          # Verificar que el secreto esté configurado
+          if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "❌ ERROR: GEMINI_API_KEY secret is not configured"
+            exit 1
+          fi
 
+          # Buscar y reemplazar el script tag
+          sed -i 's|<script src="config\.js"></script>|<script>window.GEMINI_API_KEY = "${{ secrets.GEMINI_API_KEY }}";</script>|g' index.html
+
+          # Verificar que el reemplazo fue exitoso
+          if grep -q "window.GEMINI_API_KEY" index.html; then
+            echo "✅ API Key injected successfully"
+            grep "window.GEMINI_API_KEY" index.html
+          else
+            echo "❌ ERROR: Failed to inject API Key"
+            echo "Looking for pattern: <script src=\"config.js\"></script>"
+            grep -n "config.js" index.html || echo "Pattern not found in HTML"
+            exit 1
+          fi
+          
       - name: Setup Pages
         uses: actions/configure-pages@v4
-
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
+          
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
