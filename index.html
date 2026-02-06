@@ -235,10 +235,10 @@
 
         async function fetchGemini(userQuery, retries = 5, delay = 1000) {
             const systemPrompt = `Eres un asesor de ventas de FIWIS. Tenemos estos planes: 200Mbps(S/40), 300Mbps(S/50), 500Mbps(S/60), 800Mbps(S/70) y 1000Mbps(S/90).
-            PROMOCIONES ACTUALES:
-            1. Desde el plan de S/60 damos 1 TV GRATIS.
-            2. Mes 1 se paga completo (adelantado). Mes 2 y 3 se paga el 50% de la mensualidad. Mes 4 normal.
-            Responde de forma entusiasta, usa emojis escolares y de fibra óptica. Máximo 2 líneas breves.`;
+PROMOCIONES ACTUALES:
+1. Desde el plan de S/60 damos 1 TV GRATIS.
+2. Mes 1 se paga completo (adelantado). Mes 2 y 3 se paga el 50% de la mensualidad. Mes 4 normal.
+Responde de forma entusiasta, usa emojis escolares y de fibra óptica. Máximo 2 líneas breves.`;
 
             // Validar que la API key esté configurada
             if (!window.GEMINI_API_KEY || window.GEMINI_API_KEY === 'TU_API_KEY_AQUI') {
@@ -251,8 +251,11 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                        contents: [{
+                            parts: [{
+                                text: systemPrompt + "\n\nPregunta del usuario: " + userQuery
+                            }]
+                        }]
                     })
                 });
                 if (!response.ok) throw new Error('API Error');
