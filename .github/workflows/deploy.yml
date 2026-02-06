@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy with API Key Injection
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,23 +20,24 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Create config.js with API Key
+        
+      - name: Inject API Key into HTML
         run: |
-          echo "window.GEMINI_API_KEY = '${{ secrets.GEMINI_API_KEY }}';" > config.js
-
+          sed -i 's|<script src="config.js"></script>|<script>window.GEMINI_API_KEY = "${{ secrets.GEMINI_API_KEY }}";</script>|g' index.html
+          echo "✅ API Key injected successfully"
+          grep "window.GEMINI_API_KEY" index.html
+          
       - name: Setup Pages
         uses: actions/configure-pages@v4
-
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
+          
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
