@@ -26,26 +26,8 @@ jobs:
         
       - name: Inject API Key into HTML
         run: |
-          # Verificar que el secreto esté configurado
-          if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
-            echo "❌ ERROR: GEMINI_API_KEY secret is not configured"
-            exit 1
-          fi
+          echo "window.GEMINI_API_KEY = '${{ secrets.GEMINI_API_KEY }}';" > config.js
 
-          # Buscar y reemplazar el script tag
-          sed -i 's|<script src="config\.js"></script>|<script>window.GEMINI_API_KEY = "${{ secrets.GEMINI_API_KEY }}";</script>|g' index.html
-
-          # Verificar que el reemplazo fue exitoso
-          if grep -q "window.GEMINI_API_KEY" index.html; then
-            echo "✅ API Key injected successfully"
-            grep "window.GEMINI_API_KEY" index.html
-          else
-            echo "❌ ERROR: Failed to inject API Key"
-            echo "Looking for pattern: <script src=\"config.js\"></script>"
-            grep -n "config.js" index.html || echo "Pattern not found in HTML"
-            exit 1
-          fi
-          
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
